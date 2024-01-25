@@ -9,20 +9,20 @@ def create_board_copy():
         boardcopy.append(temp_row)
     return boardcopy
 
-def piece_pick(coords):
+def piece_pick(coords, boardtype):
     piece_selected = board[coords[0]][coords[1]]
     if piece_selected[1] == "p":
-        return pawn_moves(coords)
+        return pawn_moves(coords, boardtype)
     elif piece_selected[1] == "R":
-        return rook_moves(coords)
+        return rook_moves(coords, boardtype)
     elif piece_selected[1] == "B":
-        return bishop_moves(coords)
+        return bishop_moves(coords, boardtype)
     elif piece_selected[1] == "Q":
-        return queen_moves(coords)
+        return queen_moves(coords, boardtype)
     elif piece_selected[1] == "K":
-        return king_moves(coords)
+        return king_moves(coords, boardtype)
     elif piece_selected[1] == "N":
-        return knight_moves(coords)
+        return knight_moves(coords, boardtype)
     
 def white_attack(boardused):
     final_w_area = []
@@ -30,7 +30,7 @@ def white_attack(boardused):
     for i in range(0, 8):
         for j in range(0, 8):
             if "w" in boardused[i][j]:
-                all_white_area += piece_pick([i, j])[1]
+                all_white_area += piece_pick([i, j], boardused)[1]
     for i in range(0, len(all_white_area)):
         if all_white_area[i] not in final_w_area:
             final_w_area.append(all_white_area[i])
@@ -43,7 +43,7 @@ def black_attack(boardused):
     for i in range(0, 8):
         for j in range(0, 8):
             if "b" in boardused[i][j]:
-                all_black_area += piece_pick([i, j])[1]
+                all_black_area += piece_pick([i, j], boardused)[1]
     for i in range(0, len(all_black_area)):
         if all_black_area[i] not in final_b_area:
             final_b_area.append(all_black_area[i])
@@ -52,10 +52,8 @@ def black_attack(boardused):
 
 def king_moves_exe(coords):
     king_selected = board[coords[0]][coords[1]]
-    row = coords[0]
-    collumn = coords[1]
     real_king_moves = []
-    king_moves_main = king_moves(coords)[0]
+    king_moves_main = king_moves(coords, board)[0]
     if king_selected[0] == "w":
         
         area = black_attack(board)
@@ -96,6 +94,7 @@ def check_for_check(color, board_used):
             return True
         else:
             return False
+    
 
 #this will check if the color (parameter) king is in check
 
@@ -112,13 +111,14 @@ def move(coords, endlocation, boardused):
 
 def available_moves_exe(coords, function):
     piece_selected = board[coords[0]][coords[1]]
-    color1 = piece_selected[0]
-    moves = function(coords)[0]
+    color = piece_selected[0]
+    moves = function(coords, board)[0]
     real_available_moves = []
     for i in range(0, len(moves)):
         boardcopy = create_board_copy()
         move(coords, moves[i], boardcopy)
-        if check_for_check(color1, boardcopy) == False:
+        check = check_for_check(color, boardcopy)
+        if check == False:
             real_available_moves.append(moves[i])
     return real_available_moves
 
@@ -164,6 +164,17 @@ def possible_moves_in_check(coords):
     return possible_moves
 
 
+def king_moves_exe_exe(coords):
+    real_moves = []
+    color = board[coords[0]][coords[1]][0]
+    moves = king_moves_exe(coords)
+    for i in range(0, len(moves)):
+        boardcopy = create_board_copy()
+        move(coords, moves[i], boardcopy)
+        if check_for_check(color, boardcopy) == False:
+            real_moves.append(moves[i])
+    return real_moves
+
 
 def checkmate_check(color):
 
@@ -181,10 +192,12 @@ def checkmate_check(color):
         for j in range(0, 8):
             if board[i][j][0] == color and (board[i][j][1] != "K"):
                 total_possible_moves.append(possible_moves_in_check([i, j]))
-
-
-    if (check_for_check(color, board) == True) and (len(king_moves_exe(coords)) == 0) and (len(total_possible_moves) == 0):
+    length = 0
+    for i in range(0, len(total_possible_moves)):
+        if total_possible_moves[i] != []:
+            length += 1
+            break
+    if (check_for_check(color, board) == True) and (len(king_moves_exe_exe(coords)) == 0) and (length == 0):
         return True
     else:
         return False
-
